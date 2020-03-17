@@ -12,8 +12,8 @@ import Random
 
 
 type alias Model =
-    { tall : Int
-    , riktigSvar : Int
+    { gangetabell : Int
+    , tall : Int
     , input : String
     , resultat : Resultat
     , retning : Retning
@@ -34,7 +34,12 @@ type Retning
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model 2 0 "" IkkeBesvart Venstre
+    ( { gangetabell = 6
+      , tall = 0
+      , input = ""
+      , resultat = IkkeBesvart
+      , retning = Venstre
+      }
     , Cmd.batch
         [ Random.generate NyttTall (Random.int 0 10)
         , Random.generate NyRetning (Random.uniform Venstre [ Hoyre ])
@@ -58,7 +63,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         LagNyttTall ->
-            ( model, Random.generate NyttTall (Random.int 0 10) )
+            ( { model | resultat = IkkeBesvart, input = "" }, Random.generate NyttTall (Random.int 0 10) )
 
         NyttTall tall ->
             ( { model | tall = tall }, Cmd.none )
@@ -81,7 +86,7 @@ update msg model =
                                 UgyldigSvar
 
                             Just svar ->
-                                if 6 * model.tall == svar then
+                                if model.gangetabell * model.tall == svar then
                                     RiktigSvar
 
                                 else
@@ -96,15 +101,36 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
+    let
+        ( x, y ) =
+            case model.retning of
+                Venstre ->
+                    ( String.fromInt model.gangetabell, String.fromInt model.tall )
+
+                Hoyre ->
+                    ( String.fromInt model.tall, String.fromInt model.gangetabell )
+    in
     div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Seksgangen" ]
+        [ h1 [] [ text "Seksgangen" ]
         , Html.form [ onSubmit SjekkSvar ]
-            [ span [] [ text <| "6 x " ++ String.fromInt model.tall ++ " = " ]
+            [ span [] [ text <| x ++ " x " ++ y ++ " = " ]
             , Html.input [ onInput OppdaterSvar ] []
+            , Html.input
+                [ Html.Attributes.type_ "submit"
+                , Html.Attributes.value "Sjekk svar"
+                ]
+                []
             ]
         , p []
             [ viewResultat model.resultat
+            ]
+        , p []
+            [ Html.input
+                [ Html.Attributes.value "Ny oppgave"
+                , Html.Events.onClick LagNyttTall
+                , Html.Attributes.type_ "button"
+                ]
+                []
             ]
         ]
 

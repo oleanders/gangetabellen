@@ -6,19 +6,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      
-      - name: Set up dependencies
-        run: |
-          npm install create-elm-app
-          npm install firebase-tools
-          
+
       - name: Build
         run: |
           # npx replace '\[VERSION\]' 2019.8.1 .env
+          npm install create-elm-app
           npx elm-app build
-          
+
       - name: Publish
         run: |
+          npm install firebase-tools
           npx firebase deploy --token "$FIREBASE_TOKEN"
         env:
           FIREBASE_TOKEN: ${{secrets.firebase_token}}

@@ -9,7 +9,7 @@ jobs:
       
       - name: Build
         run: |
-          npm install elm-app
+          npm install create-elm-app
           # npx replace '\[VERSION\]' 2019.8.1 .env
           npx elm-app build
       - name: Publish

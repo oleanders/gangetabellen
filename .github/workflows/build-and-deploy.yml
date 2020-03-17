@@ -7,9 +7,12 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       
+      - name: Set up dependencies
+      - run: |
+          npm install create-elm-app
+          npm install firebase-tools
       - name: Build
         run: |
-          npm install create-elm-app
           # npx replace '\[VERSION\]' 2019.8.1 .env
           npx elm-app build
       - name: Publish

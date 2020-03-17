@@ -1,0 +1,19 @@
+name: Build and deploy gangetabellen
+on: push
+
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      
+      - name: Build
+        run: |
+          npm ci
+          # npx replace '\[VERSION\]' 2019.8.1 .env
+          npx elm-app build
+      - name: Publish
+        run: |
+          npx firebase deploy --token "$FIREBASE_TOKEN"
+        env:
+          FIREBASE_TOKEN: ${{secrets.firebase_token}}

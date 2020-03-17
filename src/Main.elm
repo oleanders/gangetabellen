@@ -1,10 +1,12 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, div, h1, img, p, span, text)
-import Html.Attributes exposing (src)
-import Html.Events exposing (onInput, onSubmit)
+import Browser.Dom as Dom
+import Html exposing (Html, div, h1, p, span, text)
+import Html.Attributes exposing (id)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import Random
+import Task
 
 
 
@@ -52,7 +54,9 @@ init =
 
 
 type Msg
-    = LagNyttTall
+    = NoOp
+    | VelgNyGangetabell Int
+    | LagNyttTall
     | NyttTall Int
     | NyRetning Retning
     | OppdaterSvar String
@@ -62,11 +66,26 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        VelgNyGangetabell nr ->
+            let
+                ( m, c ) =
+                    update LagNyttTall model
+            in
+            ( { model | gangetabell = nr }, c )
+
         LagNyttTall ->
-            ( { model | resultat = IkkeBesvart, input = "" }, Random.generate NyttTall (Random.int 0 10) )
+            ( { model | resultat = IkkeBesvart, input = "" }
+            , Cmd.batch
+                [ Random.generate NyttTall (Random.int 0 10)
+                , Random.generate NyRetning (Random.uniform Venstre [ Hoyre ])
+                ]
+            )
 
         NyttTall tall ->
-            ( { model | tall = tall }, Cmd.none )
+            ( { model | tall = tall, input = "" }, Cmd.none )
 
         NyRetning retning ->
             ( { model | retning = retning }, Cmd.none )
@@ -92,7 +111,9 @@ update msg model =
                                 else
                                     FeilSvar
             in
-            ( { model | resultat = resultat }, Cmd.none )
+            ( { model | resultat = resultat }
+            , Task.attempt (\_ -> NoOp) (Dom.focus "svar")
+            )
 
 
 
@@ -111,10 +132,22 @@ view model =
                     ( String.fromInt model.tall, String.fromInt model.gangetabell )
     in
     div []
-        [ h1 [] [ text "Seksgangen" ]
+        [ p []
+            [ Html.a [ onClick <| VelgNyGangetabell 1 ] [ text <| gantetabelltekst 1, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 2 ] [ text <| gantetabelltekst 2, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 3 ] [ text <| gantetabelltekst 3, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 4 ] [ text <| gantetabelltekst 4, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 5 ] [ text <| gantetabelltekst 5, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 6 ] [ text <| gantetabelltekst 6, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 7 ] [ text <| gantetabelltekst 7, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 8 ] [ text <| gantetabelltekst 8, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 9 ] [ text <| gantetabelltekst 9, text " | " ]
+            , Html.a [ onClick <| VelgNyGangetabell 10 ] [ text <| gantetabelltekst 10 ]
+            ]
+        , h1 [] [ text <| gantetabelltekst model.gangetabell ]
         , Html.form [ onSubmit SjekkSvar ]
             [ span [] [ text <| x ++ " x " ++ y ++ " = " ]
-            , Html.input [ onInput OppdaterSvar ] []
+            , Html.input [ onInput OppdaterSvar, Html.Attributes.value model.input, id "svar" ] []
             , Html.input
                 [ Html.Attributes.type_ "submit"
                 , Html.Attributes.value "Sjekk svar"
@@ -133,6 +166,43 @@ view model =
                 []
             ]
         ]
+
+
+gantetabelltekst : Int -> String
+gantetabelltekst tall =
+    case tall of
+        1 ->
+            "En-gangen"
+
+        2 ->
+            "To-gangen"
+
+        3 ->
+            "Tre-gangen"
+
+        4 ->
+            "Fire-gangen"
+
+        5 ->
+            "Fem-gangen"
+
+        6 ->
+            "Seks-gangen"
+
+        7 ->
+            "Syv-gangen"
+
+        8 ->
+            "Åtte-gangen"
+
+        9 ->
+            "Ni-gangen"
+
+        10 ->
+            "Ti-gangen"
+
+        _ ->
+            "Ugyldig verdi"
 
 
 viewResultat : Resultat -> Html Msg

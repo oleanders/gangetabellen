@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser
 import Browser.Dom as Dom
 import Html exposing (Html, div, h1, p, span, text)
-import Html.Attributes exposing (id)
+import Html.Attributes exposing (href, id)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Random
 import Task
@@ -60,6 +60,7 @@ type Msg
     | NyttTall Int
     | NyRetning Retning
     | OppdaterSvar String
+    | Hurtigsvar String
     | SjekkSvar
 
 
@@ -71,10 +72,10 @@ update msg model =
 
         VelgNyGangetabell nr ->
             let
-                ( m, c ) =
+                ( _, cmd ) =
                     update LagNyttTall model
             in
-            ( { model | gangetabell = nr }, c )
+            ( { model | gangetabell = nr }, cmd )
 
         LagNyttTall ->
             ( { model | resultat = IkkeBesvart, input = "" }
@@ -115,6 +116,13 @@ update msg model =
             , Task.attempt (\_ -> NoOp) (Dom.focus "svar")
             )
 
+        Hurtigsvar input ->
+            let
+                ( m, cmd ) =
+                    update SjekkSvar { model | input = input }
+            in
+            ( m, cmd )
+
 
 
 ---- VIEW ----
@@ -130,20 +138,33 @@ view model =
 
                 Hoyre ->
                     ( String.fromInt model.tall, String.fromInt model.gangetabell )
+
+        viewMenyKnapp nr =
+            Html.a
+                [ href <| "#" ++ String.fromInt nr
+                , onClick <| VelgNyGangetabell nr
+                ]
+                [ text <| gantetabelltekst nr ]
+
+        viewVelgEtTallKnapp t nr =
+            let
+                tall =
+                    (t * 10) + nr
+            in
+            Html.input
+                [ Html.Attributes.type_ "button"
+                , Html.Attributes.value <| String.fromInt tall
+                , onClick <| Hurtigsvar <| String.fromInt tall
+                , Html.Attributes.style "width" "40px"
+                ]
+                []
     in
     div []
         [ p []
-            [ Html.a [ onClick <| VelgNyGangetabell 1 ] [ text <| gantetabelltekst 1, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 2 ] [ text <| gantetabelltekst 2, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 3 ] [ text <| gantetabelltekst 3, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 4 ] [ text <| gantetabelltekst 4, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 5 ] [ text <| gantetabelltekst 5, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 6 ] [ text <| gantetabelltekst 6, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 7 ] [ text <| gantetabelltekst 7, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 8 ] [ text <| gantetabelltekst 8, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 9 ] [ text <| gantetabelltekst 9, text " | " ]
-            , Html.a [ onClick <| VelgNyGangetabell 10 ] [ text <| gantetabelltekst 10 ]
-            ]
+            (List.range 1 10
+                |> List.map viewMenyKnapp
+                |> List.intersperse (text " | ")
+            )
         , h1 [] [ text <| gantetabelltekst model.gangetabell ]
         , Html.form [ onSubmit SjekkSvar ]
             [ span [] [ text <| x ++ " x " ++ y ++ " = " ]
@@ -165,44 +186,18 @@ view model =
                 ]
                 []
             ]
+        , p []
+            (List.range 1 10
+                |> List.repeat 10
+                |> List.indexedMap (\i d -> List.map (viewVelgEtTallKnapp i) d)
+                |> List.map (\d -> p [] d)
+            )
         ]
 
 
 gantetabelltekst : Int -> String
 gantetabelltekst tall =
-    case tall of
-        1 ->
-            "En-gangen"
-
-        2 ->
-            "To-gangen"
-
-        3 ->
-            "Tre-gangen"
-
-        4 ->
-            "Fire-gangen"
-
-        5 ->
-            "Fem-gangen"
-
-        6 ->
-            "Seks-gangen"
-
-        7 ->
-            "Syv-gangen"
-
-        8 ->
-            "Åtte-gangen"
-
-        9 ->
-            "Ni-gangen"
-
-        10 ->
-            "Ti-gangen"
-
-        _ ->
-            "Ugyldig verdi"
+    String.fromInt tall ++ "-gangen"
 
 
 viewResultat : Resultat -> Html Msg

@@ -1,5 +1,6 @@
 {
     "hosting": {
+      "site": "gangetabell",
       "public": "build",
       "ignore": [
         "firebase.json",

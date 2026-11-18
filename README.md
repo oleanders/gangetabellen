@@ -8,3 +8,4 @@ Verktøy for å øve på gangetabellen.
 
 https://gangetabell.web.app
 
+Kjør `npm ci` og `npm start` for lokal utvikling med elm-watch. `npm run build` lager produksjonsbygget i `build/`.
